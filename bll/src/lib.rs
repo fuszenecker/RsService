@@ -15,8 +15,12 @@ impl Bll {
         }
     }
 
-    pub fn process_user(self: &mut Self, user: User) -> Result<(), String> {
-        Ok(())
+    pub fn get_user_by_id(self: &mut Self, id: i32) -> Result<User, String> {
+        self.repository.get_user(id)
+    }
+
+    pub fn create_user(self: &mut Self, id: i32, user_name: String) -> Result<(), String> {
+        self.repository.save_user(User { id: id, name: user_name })
     }
 }
 
