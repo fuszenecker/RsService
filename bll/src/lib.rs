@@ -6,12 +6,12 @@ use std::error::Error;
 use models::user::User;
 use repositories::userrepository::UserRepository;
 
-pub struct Bll {
-    repository: Box<dyn UserRepository>,
+pub struct Bll<'a> {
+    repository: &'a mut Box<dyn UserRepository>,
 }
 
-impl Bll {
-    pub fn new(repository: Box<dyn UserRepository>) -> Self {
+impl<'a> Bll<'a> {
+    pub fn new(repository: &'a mut Box<dyn UserRepository>) -> Self {
         Self { repository }
     }
 
