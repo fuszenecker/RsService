@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use bll::{models::user::User, repositories::userrepository::UserRepository as BllUserRepository};
 use rusqlite::{params, Connection, OpenFlags, Result};
 
@@ -17,8 +19,7 @@ impl UserRepository {
                         name            TEXT NOT NULL
                 )",
                 [],
-            )
-            .unwrap();
+            ).unwrap();
 
         Self {
             connection: connecion,
@@ -27,32 +28,36 @@ impl UserRepository {
 }
 
 impl BllUserRepository for UserRepository {
-    fn save_user(&mut self, user: User) -> Result<(), String> {
+    fn save_user(&mut self, user: User) -> Result<(), Box<dyn Error>> {
         self.connection
             .execute(
                 "INSERT INTO users (id, name) VALUES (?1, ?2)",
                 params![user.id, user.name],
-            )
-            .unwrap();
+            )?;
 
         Ok(())
     }
 
-    fn get_user(&mut self, _user_id: i32) -> Result<User, String> {
+    fn get_user(&mut self, user_id: i32) -> Result<User, Box<dyn Error>> {
         let mut stmt = self
             .connection
-            .prepare("SELECT id, name FROM users")
-            .unwrap();
-        let users_iter = stmt
-            .query_map([], |row| {
-                Ok(User {
-                    id: row.get(0).unwrap(),
-                    name: row.get(1).unwrap(),
-                })
-            })
-            .unwrap();
+            .prepare("SELECT id, name FROM users WHERE id=?1")?;
 
-        let user = users_iter.take(1).last().unwrap().unwrap();
-        Ok(user)
+        let users_iter = stmt
+            .query_map(params![user_id], |row| {
+                Ok(User {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                })
+            })?;
+
+        if let Some (user) = users_iter.take(1).last()
+        {
+            Ok(user?)
+        }
+        else
+        {
+            Err("Not found".into())
+        }
     }
 }

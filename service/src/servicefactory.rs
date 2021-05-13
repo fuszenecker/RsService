@@ -16,6 +16,7 @@ impl<'a> ServiceFactory<'a> {
     }
 
     pub fn create_bll(&mut self) -> bll::Bll {
-        bll::Bll::new(Box::new(UserRepository::new(&self.db_name)))
+        let persistence_layer = UserRepository::new(&self.db_name);
+        bll::Bll::new(Box::new(persistence_layer))
     }
 }
